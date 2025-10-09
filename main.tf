@@ -28,7 +28,7 @@ resource "aws_subnet" "public" {
   vpc_id                  = aws_vpc.main.id
   cidr_block              = var.public_cidrs[count.index]
   availability_zone       = data.aws_availability_zones.available.names[count.index] // Place each in a different AZ 
-  map_public_ip_on_launch = true                                                   // Enable public IP assignment
+  map_public_ip_on_launch = true                                                     // Enable public IP assignment
 
   tags = {
     Name = "${var.project_name}-public-subnet-${count.index + 1}"
@@ -68,7 +68,7 @@ resource "aws_route_table" "private" {
 // 7. Create Public Route to the Internet Gateway
 resource "aws_route" "public_internet_route" {
   route_table_id         = aws_route_table.public.id
-  destination_cidr_block = "0.0.0.0/0" // The required destination CIDR block [cite: 167]
+  destination_cidr_block = "0.0.0.0/0"                 // The required destination CIDR block [cite: 167]
   gateway_id             = aws_internet_gateway.igw.id // Target is the IGW [cite: 167]
 }
 
