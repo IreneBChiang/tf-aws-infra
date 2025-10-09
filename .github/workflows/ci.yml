@@ -5,8 +5,7 @@ name: Terraform CI Checks
 # Runs on every Pull Request to ensure code quality before merging
 on:
   pull_request:
-    branches:
-      - main
+    branches: [ main ]
   workflow_dispatch:
 
 jobs:
@@ -14,11 +13,11 @@ jobs:
     name: Validate and Format Check
     runs-on: ubuntu-latest
     
-    # Use the AWS CLI profile 'demo' for validation (optional, but good practice)
+    # Use the AWS CLI profile 'demo' for validation
     env:
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      AWS_REGION: us-east-1 // You can change this to your desired region
+      # AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      # AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_REGION: us-east-1 
 
     steps:
       # Checkout the code
