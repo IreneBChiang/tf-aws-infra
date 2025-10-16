@@ -40,3 +40,16 @@ variable "private_cidrs" {
   type        = list(string)
   default     = ["10.0.11.0/24", "10.0.12.0/24", "10.0.13.0/24"]
 }
+
+# AMI to launch the app EC2 with (built by Packer in the webapp repo)
+variable "app_ami_id" {
+  description = "Packer-built AMI ID for the application instance (from DEV account)"
+  type        = string
+}
+
+# Port your app listens on (FastAPI default 8080)
+variable "app_port" {
+  description = "Application listening port"
+  type        = number
+  default     = 8080
+}

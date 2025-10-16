@@ -14,5 +14,7 @@ terraform {
 # Configures the AWS provider. The region will be determined by the
 # variable or the CLI profile when running 'terraform apply'.
 provider "aws" {
+  region  = var.region
+  profile = "dev"
   # Explicitly defined in main.tf if using a region variable, otherwise relies on CLI config like --profile dev
 }

@@ -85,3 +85,68 @@ resource "aws_route_table_association" "private" {
   subnet_id      = aws_subnet.private[count.index].id
   route_table_id = aws_route_table.private.id # Attach all private subnets to the private RT [cite: 166]
 }
+
+
+# security group (do not open DB port 3306)
+resource "aws_security_group" "a05_app_sg" {
+  name        = "a05-app-sg"
+  description = "Security group for the A05 application"
+  vpc_id      = aws_vpc.main.id
+
+  ingress {
+    description = "SSH"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    description = "HTTP"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    description = "HTTPS"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    description = "App port"
+    from_port   = var.app_port
+    to_port     = var.app_port
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "a05-app-sg"
+  }
+}
+
+
+# EC2 instance
+resource "aws_instance" "a05_app" {
+  ami                         = var.app_ami_id
+  instance_type               = "t3.micro"
+  subnet_id                   = element(aws_subnet.public[*].id, 0)
+  vpc_security_group_ids      = [aws_security_group.a05_app_sg.id]
+  associate_public_ip_address = true
+
+  tags = {
+    Name = "a05-fastapi-instance"
+  }
+}
