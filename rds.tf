@@ -30,9 +30,16 @@ resource "aws_db_subnet_group" "db_subnets" {
 
 # 自訂 Parameter Group（不要 default）
 resource "aws_db_parameter_group" "mysql_params" {
-  name   = "a06-mysql8-params"
-  family = "mysql8.0"
-  tags   = { Name = "a06-mysql8-params" }
+  name        = "csye6225-mysql-params"
+  family      = "mysql8.0" # 與 engine_version 對應
+  description = "Custom parameter group for MySQL"
+  tags        = { Name = "csye6225-mysql-params" }
+
+  # 範例參數，可依需求增修
+  parameter {
+    name  = "max_connections"
+    value = "150"
+  }
 }
 
 # RDS instance（私有、禁公開）
