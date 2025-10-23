@@ -57,7 +57,7 @@ variable "db_name" {
 
 variable "aws_profile" {
   type        = string
-  description = "要使用的 AWS profile（例如 dev 或 demo）"
+  description = "AWS profile to use (e.g., dev or demo)"
 }
 
 # 用哪個系統帳號跑 service（A05 要求用 csye6225）
