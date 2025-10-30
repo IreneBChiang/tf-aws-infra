@@ -30,13 +30,13 @@ resource "aws_security_group" "csye6225_app_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  ingress {
-    description = "App port"
-    protocol    = "tcp"
-    from_port   = var.app_port
-    to_port     = var.app_port
-    cidr_blocks = ["0.0.0.0/0"]
-  }
+  # ingress {
+  #   description = "App port"
+  #   protocol    = "tcp"
+  #   from_port   = var.app_port
+  #   to_port     = var.app_port
+  #   cidr_blocks = ["0.0.0.0/0"]
+  # }
 
   egress {
     protocol    = "-1"

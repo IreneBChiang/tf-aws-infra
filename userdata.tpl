@@ -27,6 +27,72 @@ systemctl daemon-reload || true
 systemctl enable myapp.service || true
 systemctl restart myapp.service || true
 
+# 安裝與設定 Nginx 反向代理 (listen 80)
+if command -v yum >/dev/null 2>&1; then
+  # Amazon Linux / RHEL 家族
+  if command -v amazon-linux-extras >/dev/null 2>&1; then
+    amazon-linux-extras install -y nginx1 || yum install -y nginx
+  else
+    yum install -y nginx
+  fi
+
+  # 使用 /etc/nginx/conf.d，Amazon Linux 會自動 include
+  install -d -m 0755 /etc/nginx/conf.d
+  cat >/etc/nginx/conf.d/myapp.conf <<EOF
+server {
+    listen 80 default_server;
+    server_name _;
+
+    location / {
+        # 注意：結尾不要加斜線，避免將 /healthz 重寫掉
+        proxy_pass http://127.0.0.1:${app_port};
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_read_timeout 120;
+    }
+}
+EOF
+
+  # 移除可能存在的預設站台，避免吃到 default
+  rm -f /etc/nginx/conf.d/default.conf || true
+
+elif command -v apt-get >/dev/null 2>&1; then
+  # Ubuntu / Debian
+  export DEBIAN_FRONTEND=noninteractive
+  apt-get update -y
+  apt-get install -y nginx
+
+  # Ubuntu 使用 sites-available / sites-enabled
+  mkdir -p /etc/nginx/sites-available /etc/nginx/sites-enabled
+  cat >/etc/nginx/sites-available/webapp <<'EOF'
+server {
+    listen 80 default_server;
+    server_name _;
+
+    location / {
+        proxy_pass http://127.0.0.1:__APP_PORT__;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_read_timeout 120;
+    }
+}
+EOF
+  # 將佔位符換成實際 app_port
+  sed -i "s/__APP_PORT__/${app_port}/g" /etc/nginx/sites-available/webapp
+
+  ln -sf /etc/nginx/sites-available/webapp /etc/nginx/sites-enabled/webapp
+  # 移除預設站台
+  rm -f /etc/nginx/sites-enabled/default || true
+  rm -f /etc/nginx/conf.d/default.conf || true
+fi
+
+# 驗證並啟動/重載 Nginx
+nginx -t
+systemctl enable --now nginx
+systemctl reload nginx || true
+
 # CloudWatch Agent 安裝
 if ! command -v amazon-cloudwatch-agent >/dev/null 2>&1; then
   if command -v yum >/dev/null 2>&1; then
@@ -37,7 +103,6 @@ if ! command -v amazon-cloudwatch-agent >/dev/null 2>&1; then
     apt-get install -y ./amazon-cloudwatch-agent.deb
   fi
 fi
-
 
 # 準備 webapp 日誌檔 (先寫一行，讓 Log Stream 立即被建立）
 install -d -m 0755 /var/log/webapp
