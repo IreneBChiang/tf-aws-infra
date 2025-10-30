@@ -55,13 +55,48 @@ variable "db_name" {
   default = "csye6225"
 }
 
-variable "aws_profile" {
-  type        = string
-  description = "AWS profile to use (e.g., dev or demo)"
-}
+# variable "aws_profile" {
+#   type        = string
+#   description = "AWS profile to use (e.g., dev or demo)"
+# }
 
 # 用哪個系統帳號跑 service（A05 要求用 csye6225）
 variable "service_user" {
   type    = string
   default = "csye6225"
+}
+
+# Assignment07 新增項目
+# Root Domain
+variable "root_domain" {
+  description = "Root domain managed in Route53 (root account)"
+  type        = string
+  default     = "ibchiang.me"
+}
+
+# Environment (dev or demo)
+variable "env" {
+  description = "Environment subdomain: dev or demo"
+  type        = string
+}
+
+# CloudWatch Log Group 名稱（依環境可分開）
+variable "log_group_name" {
+  description = "CloudWatch Log Group name for this environment"
+  type        = string
+  default     = "/csye6225/webapp"
+}
+
+# CloudWatch Agent 設定用（不一定要在 tfvars 設）
+variable "cwagent_config_json" {
+  description = "Rendered CloudWatch Agent config template"
+  type        = string
+  default     = ""
+}
+
+#（可選）Metrics 前綴（CloudWatch/StatsD）
+variable "metrics_prefix" {
+  description = "Prefix for StatsD metrics (e.g., webapp.dev)"
+  type        = string
+  default     = "webapp"
 }

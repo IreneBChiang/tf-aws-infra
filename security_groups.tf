@@ -1,8 +1,8 @@
 # Security Groups
 
 # App SG（不要開 DB port）
-resource "aws_security_group" "a05_app_sg" {
-  name        = "a05-app-sg"
+resource "aws_security_group" "csye6225_app_sg" {
+  name        = "csye6225-app-sg"
   description = "Security group for the A05 application"
   vpc_id      = aws_vpc.main.id
 
