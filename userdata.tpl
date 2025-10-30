@@ -26,3 +26,38 @@ fi
 systemctl daemon-reload || true
 systemctl enable myapp.service || true
 systemctl restart myapp.service || true
+
+# CloudWatch Agent 安裝
+if ! command -v amazon-cloudwatch-agent >/dev/null 2>&1; then
+  if command -v yum >/dev/null 2>&1; then
+    yum install -y amazon-cloudwatch-agent
+  elif command -v apt-get >/dev/null 2>&1; then
+    apt-get update -y
+    wget https://amazoncloudwatch-agent.s3.amazonaws.com/ubuntu/amd64/latest/amazon-cloudwatch-agent.deb
+    apt-get install -y ./amazon-cloudwatch-agent.deb
+  fi
+fi
+
+
+# 準備 webapp 日誌檔 (先寫一行，讓 Log Stream 立即被建立）
+install -d -m 0755 /var/log/webapp
+touch /var/log/webapp/app.log
+chown ${service_user}:${service_user} /var/log/webapp/app.log
+chmod 0664 /var/log/webapp/app.log
+echo "bootstrap cw $(date -u +%FT%TZ)" >> /var/log/webapp/app.log || true
+
+# 寫入 CloudWatch Agent 設定
+install -d -m 0755 /opt/aws/amazon-cloudwatch-agent/etc
+cat >/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json <<'JSON'
+${cwagent_config_json}
+JSON
+chown root:root /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
+chmod 0644 /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
+
+# 啟動 CloudWatch Agent
+systemctl enable amazon-cloudwatch-agent || true
+/opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a stop || true
+/opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
+  -a fetch-config -m ec2 -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json -s
+systemctl start amazon-cloudwatch-agent
+

@@ -44,3 +44,13 @@ resource "aws_iam_instance_profile" "app_profile" {
   name = "a06-ec2-profile"
   role = aws_iam_role.app_role.name
 }
+
+resource "aws_iam_role_policy_attachment" "cwagent_server" {
+  role       = aws_iam_role.app_role.name
+  policy_arn = "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
+}
+
+resource "aws_iam_role_policy_attachment" "cw_logs_full" {
+  role       = aws_iam_role.app_role.name
+  policy_arn = "arn:aws:iam::aws:policy/CloudWatchLogsFullAccess"
+}

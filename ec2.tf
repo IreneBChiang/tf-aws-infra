@@ -1,10 +1,10 @@
 # EC2 instance
 
-resource "aws_instance" "a05_app" {
+resource "aws_instance" "csye6225_app" {
   ami                         = var.app_ami_id
   instance_type               = "t3.micro"
   subnet_id                   = element(aws_subnet.public[*].id, 0)
-  vpc_security_group_ids      = [aws_security_group.a05_app_sg.id]
+  vpc_security_group_ids      = [aws_security_group.csye6225_app_sg.id]
   associate_public_ip_address = true
 
   # 讓 EC2 取得 S3 權限
@@ -28,7 +28,17 @@ resource "aws_instance" "a05_app" {
     db_name      = var.db_name
     s3_bucket    = aws_s3_bucket.images.bucket
     service_user = var.service_user
+
+    # Assignment07 新增
+    env            = var.env
+    log_group_name = var.log_group_name
+
+    # 將 CloudWatch Agent 設定渲染成 JSON 傳進 userdata
+    cwagent_config_json = templatefile("${path.module}/cwagent.json.tpl", {
+      env            = var.env
+      log_group_name = var.log_group_name
+    })
   })
 
-  tags = { Name = "a05-fastapi-instance" }
+  tags = { Name = "CSYE6225" }
 }
