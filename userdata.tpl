@@ -43,6 +43,8 @@ server {
     listen 80 default_server;
     server_name _;
 
+    client_max_body_size 6m;
+
     location / {
         # 注意：結尾不要加斜線，避免將 /healthz 重寫掉
         proxy_pass http://127.0.0.1:${app_port};
@@ -70,6 +72,8 @@ server {
     listen 80 default_server;
     server_name _;
 
+    client_max_body_size 6m;
+
     location / {
         proxy_pass http://127.0.0.1:__APP_PORT__;
         proxy_set_header Host $host;
@@ -93,23 +97,23 @@ nginx -t
 systemctl enable --now nginx
 systemctl reload nginx || true
 
-# CloudWatch Agent 安裝
-if ! command -v amazon-cloudwatch-agent >/dev/null 2>&1; then
-  if command -v yum >/dev/null 2>&1; then
-    yum install -y amazon-cloudwatch-agent
-  elif command -v apt-get >/dev/null 2>&1; then
-    apt-get update -y
-    wget https://amazoncloudwatch-agent.s3.amazonaws.com/ubuntu/amd64/latest/amazon-cloudwatch-agent.deb
-    apt-get install -y ./amazon-cloudwatch-agent.deb
-  fi
-fi
+# # CloudWatch Agent 安裝
+# if ! command -v amazon-cloudwatch-agent >/dev/null 2>&1; then
+#   if command -v yum >/dev/null 2>&1; then
+#     yum install -y amazon-cloudwatch-agent
+#   elif command -v apt-get >/dev/null 2>&1; then
+#     apt-get update -y
+#     wget https://amazoncloudwatch-agent.s3.amazonaws.com/ubuntu/amd64/latest/amazon-cloudwatch-agent.deb
+#     apt-get install -y ./amazon-cloudwatch-agent.deb
+#   fi
+# fi
 
-# 準備 webapp 日誌檔 (先寫一行，讓 Log Stream 立即被建立）
-install -d -m 0755 /var/log/webapp
-touch /var/log/webapp/app.log
-chown ${service_user}:${service_user} /var/log/webapp/app.log
-chmod 0664 /var/log/webapp/app.log
-echo "bootstrap cw $(date -u +%FT%TZ)" >> /var/log/webapp/app.log || true
+# # 準備 webapp 日誌檔 (先寫一行，讓 Log Stream 立即被建立）
+# install -d -m 0755 /var/log/webapp
+# touch /var/log/webapp/app.log
+# chown ${service_user}:${service_user} /var/log/webapp/app.log
+# chmod 0664 /var/log/webapp/app.log
+# echo "bootstrap cw $(date -u +%FT%TZ)" >> /var/log/webapp/app.log || true
 
 # 寫入 CloudWatch Agent 設定
 install -d -m 0755 /opt/aws/amazon-cloudwatch-agent/etc
