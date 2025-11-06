@@ -100,3 +100,20 @@ variable "metrics_prefix" {
   type        = string
   default     = "webapp"
 }
+
+# 空字串表示「不用 SSH 金鑰」
+variable "key_name" {
+  type    = string
+  default = ""
+}
+
+variable "app_instance_type" {
+  type    = string
+  default = "t3.micro"
+}
+
+# 控制是否建立單台 EC2（舊作業用）
+variable "enable_single_instance" {
+  type    = bool
+  default = false
+}
