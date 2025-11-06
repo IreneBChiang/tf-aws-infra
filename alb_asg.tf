@@ -103,7 +103,7 @@ resource "aws_autoscaling_group" "app_asg" {
   desired_capacity          = 3
   default_cooldown          = 60
   vpc_zone_identifier       = aws_subnet.public[*].id
-  health_check_type         = "EC2"
+  health_check_type         = "ELB"
   health_check_grace_period = 60
   target_group_arns         = [aws_lb_target_group.app_tg.arn]
 
