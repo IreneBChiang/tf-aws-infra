@@ -107,9 +107,21 @@ resource "aws_autoscaling_group" "app_asg" {
   health_check_grace_period = 60
   target_group_arns         = [aws_lb_target_group.app_tg.arn]
 
-  launch_template {
-    id      = aws_launch_template.app_lt.id
-    version = "$Latest"
+  mixed_instances_policy {
+    launch_template {
+      launch_template_specification {
+        launch_template_id = aws_launch_template.app_lt.id
+        version            = "$Latest"
+      }
+      # 依優先順序（沒設 priority 時，照宣告順序）
+      override { instance_type = "t3a.micro" } # 先用這個
+      override { instance_type = "t3.micro" }  # 不夠再試這個
+      override { instance_type = "t2.micro" }  # 再不夠用這個
+    }
+    # 只用 On-Demand（沒有 Spot），維持預設就行
+    instances_distribution {
+      on_demand_percentage_above_base_capacity = 100
+    }
   }
 
   tag {
