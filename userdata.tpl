@@ -8,11 +8,81 @@ id -u ${service_user} >/dev/null 2>&1 || \
 # 建設定目錄，讓群組(=service_user)可進
 install -d -m 0750 -o root -g ${service_user} /etc/myapp
 
+# Fetch DB password from AWS Secrets Manager (A09 requirement)
+REGION="${region}"
+DB_SECRET_ARN="${db_secret_arn}"
+
+# 安裝 awscli / python3（部分 AMI 可能沒有）
+if ! command -v aws >/dev/null 2>&1; then
+  if command -v yum >/dev/null 2>&1; then
+    # Amazon Linux / RHEL
+    yum install -y awscli
+  elif command -v apt-get >/dev/null 2>&1; then
+    # Ubuntu / Debian：用官方 AWS CLI v2 安裝方式
+    apt-get update -y
+    apt-get install -y unzip curl
+
+    curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+    unzip awscliv2.zip
+    ./aws/install
+  fi
+fi
+
+# 確保有 python3
+if ! command -v python3 >/dev/null 2>&1; then
+  if command -v yum >/dev/null 2>&1; then
+    yum install -y python3
+  elif command -v apt-get >/dev/null 2>&1; then
+    apt-get update -y && apt-get install -y python3
+  fi
+fi# 安裝 awscli / python3（部分 AMI 可能沒有）
+if ! command -v aws >/dev/null 2>&1; then
+  if command -v yum >/dev/null 2>&1; then
+    # Amazon Linux / RHEL
+    yum install -y awscli
+  elif command -v apt-get >/dev/null 2>&1; then
+    # Ubuntu / Debian：用官方 AWS CLI v2 安裝方式
+    apt-get update -y
+    apt-get install -y unzip curl
+
+    curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+    unzip awscliv2.zip
+    ./aws/install
+  fi
+fi
+
+# 確保有 python3
+if ! command -v python3 >/dev/null 2>&1; then
+  if command -v yum >/dev/null 2>&1; then
+    yum install -y python3
+  elif command -v apt-get >/dev/null 2>&1; then
+    apt-get update -y && apt-get install -y python3
+  fi
+fi
+
+# 從 Secrets Manager 抓出密碼（一次 pipeline，避免 heredoc 怪問題）
+DB_PASSWORD=$(
+  aws secretsmanager get-secret-value \
+    --secret-id "$DB_SECRET_ARN" \
+    --region "$REGION" \
+    --query 'SecretString' \
+    --output text \
+  | python3 -c 'import sys, json; print(json.loads(sys.stdin.read())["password"])'
+)
+
+# 如果長度是 0，直接噴錯結束，避免寫出沒有密碼的 URL
+if [ -z "$DB_PASSWORD" ]; then
+  echo "FATAL: DB_PASSWORD is empty!" >&2
+  exit 1
+fi
+
 # 寫入 .env，擁有者 root:service_user，群組可讀
 cat >/etc/myapp/.env <<EOF
 APP_PORT=${app_port}
-DATABASE_URL=mysql+pymysql://${db_user}:${db_pass}@${rds_endpoint}:3306/${db_name}
+DATABASE_URL=mysql+pymysql://${db_user}:$DB_PASSWORD@${rds_endpoint}:3306/${db_name}
 S3_BUCKET_NAME=${s3_bucket}
+USER_SIGNUP_TOPIC_ARN=${user_signup_topic_arn}
+AWS_REGION=${region}
 EOF
 chown root:${service_user} /etc/myapp/.env
 chmod 0640 /etc/myapp/.env
