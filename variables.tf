@@ -44,11 +44,11 @@ variable "db_username" {
   default = "csye6225"
 }
 
-variable "db_password" {
-  type        = string
-  sensitive   = true
-  description = "強密碼，請放在 terraform.tfvars"
-}
+# variable "db_password" {
+#   type        = string
+#   sensitive   = true
+#   description = "強密碼，請放在 terraform.tfvars"
+# }
 
 variable "db_name" {
   type    = string
@@ -116,4 +116,67 @@ variable "app_instance_type" {
 variable "enable_single_instance" {
   type    = bool
   default = false
+}
+
+# A09 新增項目
+
+# ---- For Secrets Manager ----
+# Terraform 建 secret 時會用這個 region 與 ARN 傳入 userdata
+variable "db_secret_arn" {
+  description = "ARN of the DB password secret in Secrets Manager"
+  type        = string
+  default     = ""
+}
+
+# ---- For SNS / Lambda ----
+variable "user_signup_topic_arn" {
+  description = "SNS topic ARN for user signup notifications"
+  type        = string
+  default     = ""
+}
+
+# ---- For KMS ----
+variable "kms_key_alias" {
+  description = "Alias name for KMS key used to encrypt resources"
+  type        = string
+  default     = "alias/csye6225-key"
+}
+
+# ---- For ACM & Domain ----
+# domain 用來掛 HTTPS 憑證（dev 用 ACM, demo 匯入）
+variable "app_domain" {
+  description = "Full domain name of the web application (e.g., dev.ibchiang.me)"
+  type        = string
+  default     = ""
+}
+
+variable "dev_domain" {
+  description = "Domain name used for dev environment"
+  type        = string
+  default     = ""
+}
+
+variable "demo_domain" {
+  description = "Domain name used for demo environment"
+  type        = string
+  default     = ""
+}
+
+# ---- For Lambda Artifact (from GitHub Actions) ----
+variable "lambda_artifact_s3_bucket" {
+  description = "S3 bucket storing Lambda deployment zip (uploaded by CI/CD)"
+  type        = string
+  default     = ""
+}
+
+variable "lambda_artifact_s3_key" {
+  description = "Object key (path) for Lambda zip inside the bucket"
+  type        = string
+  default     = ""
+}
+
+variable "acm_certificate_arn" {
+  description = "Imported ACM certificate arn for demo ALB HTTPS"
+  type        = string
+  default     = ""
 }

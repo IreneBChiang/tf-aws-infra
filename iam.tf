@@ -54,3 +54,44 @@ resource "aws_iam_role_policy_attachment" "cw_logs_full" {
   role       = aws_iam_role.app_role.name
   policy_arn = "arn:aws:iam::aws:policy/CloudWatchLogsFullAccess"
 }
+
+# 讓 EC2：讀取 DB 密碼的 Secret、用對的 KMS 解密、發 SNS
+data "aws_iam_policy_document" "ec2_secret_kms_sns" {
+  statement {
+    sid       = "ReadDBSecret"
+    effect    = "Allow"
+    actions   = ["secretsmanager:GetSecretValue"]
+    resources = [aws_secretsmanager_secret.db.arn]
+  }
+
+  statement {
+    sid       = "DecryptSecret"
+    effect    = "Allow"
+    actions   = ["kms:Decrypt"]
+    resources = [aws_kms_key.sec.arn]
+
+    # （推薦）限制必須是經由 Secrets Manager 解密
+    condition {
+      test     = "StringEquals"
+      variable = "kms:ViaService"
+      values   = ["secretsmanager.${var.aws_region}.amazonaws.com"]
+    }
+  }
+
+  statement {
+    sid       = "PublishSignupEvent"
+    effect    = "Allow"
+    actions   = ["sns:Publish"]
+    resources = [aws_sns_topic.user_signup.arn]
+  }
+}
+
+resource "aws_iam_policy" "ec2_secret_kms_sns" {
+  name   = "${var.project_name}-ec2-secret-kms-sns"
+  policy = data.aws_iam_policy_document.ec2_secret_kms_sns.json
+}
+
+resource "aws_iam_role_policy_attachment" "ec2_secret_kms_sns_attach" {
+  role       = aws_iam_role.app_role.name
+  policy_arn = aws_iam_policy.ec2_secret_kms_sns.arn
+}

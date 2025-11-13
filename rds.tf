@@ -52,7 +52,9 @@ resource "aws_db_instance" "app_db" {
 
   db_name  = var.db_name
   username = var.db_username
-  password = var.db_password
+  password = jsondecode(
+    aws_secretsmanager_secret_version.db.secret_string
+  )["password"]
 
   multi_az            = false
   publicly_accessible = false

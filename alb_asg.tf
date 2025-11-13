@@ -38,15 +38,19 @@ resource "aws_lb_target_group" "app_tg" {
   }
 }
 
-# Listener
-resource "aws_lb_listener" "http" {
+# 給使用者用的 HTTPS Listener
+resource "aws_lb_listener" "https" {
   load_balancer_arn = aws_lb.app.arn
-  port              = 80
-  protocol          = "HTTP"
+  port              = 443
+  protocol          = "HTTPS"
+  ssl_policy        = "ELBSecurityPolicy-2016-08"
+  # certificate_arn   = aws_acm_certificate_validation.dev.certificate_arn # dev 用 ACM，demo 改成 data 取匯入憑證
+
+  certificate_arn = var.env == "dev" ? aws_acm_certificate_validation.dev[0].certificate_arn : var.acm_certificate_arn
 
   default_action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.app_tg.arn
+    target_group_arn = aws_lb_target_group.app_tg.arn # 這個 TG 的 port 還是 80
   }
 }
 
@@ -69,15 +73,18 @@ resource "aws_launch_template" "app_lt" {
   }
 
   user_data = base64encode(templatefile("${path.module}/userdata.tpl", {
-    app_port       = var.app_port
-    rds_endpoint   = aws_db_instance.app_db.address
-    db_user        = var.db_username
-    db_pass        = var.db_password
+    region       = var.aws_region
+    app_port     = var.app_port
+    rds_endpoint = aws_db_instance.app_db.address
+    db_user      = var.db_username
+    # db_pass        = var.db_password
+    db_secret_arn  = aws_secretsmanager_secret.db.arn
     db_name        = var.db_name
     s3_bucket      = aws_s3_bucket.images.bucket
     service_user   = var.service_user
     env            = var.env
     log_group_name = var.log_group_name
+    user_signup_topic_arn = aws_sns_topic.user_signup.arn
     cwagent_config_json = templatefile("${path.module}/cwagent.json.tpl", {
       env            = var.env
       log_group_name = var.log_group_name
