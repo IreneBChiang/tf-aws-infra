@@ -50,6 +50,9 @@ resource "aws_db_instance" "app_db" {
   instance_class    = "db.t3.micro"
   allocated_storage = 20
 
+  storage_encrypted = true
+  kms_key_id        = aws_kms_key.rds.arn
+
   db_name  = var.db_name
   username = var.db_username
   password = jsondecode(

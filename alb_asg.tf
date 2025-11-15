@@ -63,6 +63,18 @@ resource "aws_launch_template" "app_lt" {
 
   # vpc_security_group_ids = [aws_security_group.csye6225_app_sg.id]
 
+  # 使用自家 KMS key 加密 EBS root volume
+  block_device_mappings {
+    device_name = "/dev/sda1" # 根據你的 AMI，常見是 /dev/xvda 或 /dev/sda1
+
+    ebs {
+      volume_size = 20 # 看你要多大，跟現在 EC2 大小一致即可
+      volume_type = "gp3"
+      encrypted   = true
+      kms_key_id  = aws_kms_key.ec2.arn
+    }
+  }
+
   network_interfaces {
     associate_public_ip_address = true
     security_groups             = [aws_security_group.csye6225_app_sg.id]

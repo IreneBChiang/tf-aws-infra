@@ -16,6 +16,15 @@ resource "aws_lambda_function" "email" {
   source_code_hash = data.archive_file.lambda_zip.output_base64sha256
   timeout          = 10
   memory_size      = 256
+
+  environment {
+    variables = {
+      VERIFY_BASE_URL     = var.verify_base_url # ex: https://dev.xxx/validateEmail
+      FROM_EMAIL          = var.from_email      # ex: noreply@ibchiang.me
+      DDB_TABLE_NAME      = aws_dynamodb_table.verification.name
+      SENDGRID_SECRET_ARN = aws_secretsmanager_secret.email.arn
+    }
+  }
 }
 
 # 允許 SNS 觸發 Lambda

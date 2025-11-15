@@ -180,3 +180,13 @@ variable "acm_certificate_arn" {
   type        = string
   default     = ""
 }
+
+variable "verify_base_url" {
+  description = "Base URL for email verification link"
+  type        = string
+}
+
+variable "from_email" {
+  description = "From email address for verification emails"
+  type        = string
+}

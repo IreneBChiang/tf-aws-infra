@@ -35,29 +35,6 @@ if ! command -v python3 >/dev/null 2>&1; then
   elif command -v apt-get >/dev/null 2>&1; then
     apt-get update -y && apt-get install -y python3
   fi
-fi# 安裝 awscli / python3（部分 AMI 可能沒有）
-if ! command -v aws >/dev/null 2>&1; then
-  if command -v yum >/dev/null 2>&1; then
-    # Amazon Linux / RHEL
-    yum install -y awscli
-  elif command -v apt-get >/dev/null 2>&1; then
-    # Ubuntu / Debian：用官方 AWS CLI v2 安裝方式
-    apt-get update -y
-    apt-get install -y unzip curl
-
-    curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-    unzip awscliv2.zip
-    ./aws/install
-  fi
-fi
-
-# 確保有 python3
-if ! command -v python3 >/dev/null 2>&1; then
-  if command -v yum >/dev/null 2>&1; then
-    yum install -y python3
-  elif command -v apt-get >/dev/null 2>&1; then
-    apt-get update -y && apt-get install -y python3
-  fi
 fi
 
 # 從 Secrets Manager 抓出密碼（一次 pipeline，避免 heredoc 怪問題）
