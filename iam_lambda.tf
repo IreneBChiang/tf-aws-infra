@@ -11,6 +11,8 @@ resource "aws_iam_policy" "lambda_min" {
   policy = jsonencode({
     Version = "2012-10-17",
     Statement = [
+
+      # CloudWatch logs
       {
         Effect = "Allow",
         Action = [
@@ -20,19 +22,41 @@ resource "aws_iam_policy" "lambda_min" {
         ],
         Resource = "arn:aws:logs:${var.aws_region}:*:log-group:/aws/lambda/*"
       },
+
+      # allow Lambda to read DB secret
       {
         Effect   = "Allow",
         Action   = ["secretsmanager:GetSecretValue"],
         Resource = aws_secretsmanager_secret.db.arn
       },
+
+      # allow Lambda to read SendGrid email API secret
+      {
+        Effect   = "Allow",
+        Action   = ["secretsmanager:GetSecretValue"],
+        Resource = aws_secretsmanager_secret.email.arn
+      },
+
+      # allow Lambda decrypt secrets with KMS
       {
         Effect   = "Allow",
         Action   = ["kms:Decrypt"],
         Resource = aws_kms_key.sec.arn
+      },
+
+      # allow Lambda to use DynamoDB (avoid duplicate emails)
+      {
+        Effect = "Allow",
+        Action = [
+          "dynamodb:GetItem",
+          "dynamodb:PutItem"
+        ],
+        Resource = aws_dynamodb_table.verification.arn
       }
     ]
   })
 }
+
 
 # 把自訂 policy 掛上 Role
 resource "aws_iam_role_policy_attachment" "lambda_min_attach" {

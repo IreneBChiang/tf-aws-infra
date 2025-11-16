@@ -40,14 +40,14 @@ resource "aws_security_group" "csye6225_app_sg" {
   description = "Security group for web application behind ALB"
   vpc_id      = aws_vpc.main.id
 
-  # SSH - optional, for debugging only (可改成你自己的 IP)
-  ingress {
-    description = "SSH"
-    protocol    = "tcp"
-    from_port   = 22
-    to_port     = 22
-    cidr_blocks = ["0.0.0.0/0"]
-  }
+  # SSH – optional, for debugging only(可改成你自己的 IP)  
+  # ingress {
+  #   description = "SSH"
+  #   protocol    = "tcp"
+  #   from_port   = 22
+  #   to_port     = 22
+  #   cidr_blocks = ["0.0.0.0/0"]
+  # }
 
   # Allow HTTP only from ALB SG
   ingress {
